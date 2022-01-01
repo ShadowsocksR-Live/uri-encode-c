@@ -16,6 +16,10 @@ if (MSVC)
 include_directories(msvc)
 endif()
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_definitions(-Wall -Werror -ggdb3 -std=c99 -Wextra -pedantic)
+endif()
+
 add_library(uri-encode STATIC src/uri_encode.c src/uri_encode.h)
 
 if(URI_BUILD_TESTS)

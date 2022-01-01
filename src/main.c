@@ -10,11 +10,12 @@ int tests_run = 0;
 
 static char * test_uri_encode(const char *uri, const char *expected) {
   const size_t len = strlen(uri);
-  char *buffer = (char*)calloc(len * 3 + 1, sizeof(char));
+  size_t b_len = len * 3 + 1;
+  char *buffer = (char*)calloc(b_len, sizeof(char));
   size_t match;
   test_alloc_failed(buffer);
   buffer[0] = '\0';
-  uri_encode(uri, len,  buffer);
+  uri_encode(uri, len,  buffer, b_len);
   match = strcmp(expected, buffer);
   printf("uri_encode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
   mu_assert("Strings don't match", match == 0);
@@ -23,11 +24,12 @@ static char * test_uri_encode(const char *uri, const char *expected) {
 }
 
 static char * test_uri_encode_len(const char *uri, const size_t len, const char *expected) {
-  char *buffer = (char *)calloc( len * 3 + 1, sizeof(char));
+  size_t b_len = len * 3 + 1;
+  char *buffer = (char *)calloc(b_len, sizeof(char));
   size_t match;
   test_alloc_failed(buffer);
   buffer[0] = '\0';
-  uri_encode(uri, len,  buffer);
+  uri_encode(uri, len,  buffer, b_len);
   match = strcmp(expected, buffer);
   printf("uri_encode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
   mu_assert("Strings don't match", match == 0);
@@ -41,7 +43,7 @@ static char * test_uri_decode(const char *uri, const char *expected) {
   size_t match;
   test_alloc_failed(buffer);
   buffer[0] = '\0';
-  uri_decode(uri, len, buffer);
+  uri_decode(uri, buffer, len);
   match = strcmp(expected, buffer);
   printf("uri_decode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
   mu_assert("Strings don't match", match == 0);
@@ -55,7 +57,7 @@ static char * test_uri_decode_len(const char *uri, size_t len_orig, const char *
   size_t match;
   test_alloc_failed(buffer);
   buffer[0] = '\0';
-  uri_decode(uri, len, buffer);
+  uri_decode(uri, buffer, len);
   match = memcmp(expected, buffer, len_orig);
   printf("uri_decode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
   mu_assert("Strings don't match", match == 0);
@@ -206,6 +208,9 @@ int main(int argc, char **argv) {
        printf("ALL TESTS PASSED\n");
    }
    printf("Tests run: %d\n", tests_run);
+
+   (void)argc;
+   (void)argv;
 
    return (err == NULL) ? 0 : -1;
 }
