@@ -6,45 +6,60 @@
 
 int tests_run = 0;
 
+#define test_alloc_failed(p) do { if (p == NULL) return "Out of memory"; } while (0)
+
 static char * test_uri_encode(const char *uri, const char *expected) {
   const size_t len = strlen(uri);
-  char buffer[ len * 3 + 1 ];
+  char *buffer = (char*)calloc(len * 3 + 1, sizeof(char));
+  size_t match;
+  test_alloc_failed(buffer);
   buffer[0] = '\0';
   uri_encode(uri, len,  buffer);
-  const size_t match = strcmp(expected, buffer);
+  match = strcmp(expected, buffer);
   printf("uri_encode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
   mu_assert("Strings don't match", match == 0);
+  free(buffer);
   return 0;
 }
 
 static char * test_uri_encode_len(const char *uri, const size_t len, const char *expected) {
-  char buffer[ len * 3 + 1 ];
+  char *buffer = (char *)calloc( len * 3 + 1, sizeof(char));
+  size_t match;
+  test_alloc_failed(buffer);
   buffer[0] = '\0';
   uri_encode(uri, len,  buffer);
-  const size_t match = strcmp(expected, buffer);
+  match = strcmp(expected, buffer);
   printf("uri_encode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
   mu_assert("Strings don't match", match == 0);
+  free(buffer);
   return 0;
 }
 
 static char * test_uri_decode(const char *uri, const char *expected) {
   const size_t len = strlen(uri);
-  char buffer[ len + 1 ];
+  char *buffer = (char*)calloc(len + 1, sizeof(char));
+  size_t match;
+  test_alloc_failed(buffer);
   buffer[0] = '\0';
   uri_decode(uri, len, buffer);
-  const size_t match = strcmp(expected, buffer);
+  match = strcmp(expected, buffer);
   printf("uri_decode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
   mu_assert("Strings don't match", match == 0);
+  free(buffer);
   return 0;
 }
 
-static char * test_uri_decode_len(const char *uri, const size_t len, const char *expected) {
-  char buffer[ len + 1 ];
+static char * test_uri_decode_len(const char *uri, size_t len_orig, const char *expected) {
+  size_t len = strlen(uri);
+  char *buffer = (char*) calloc(len + 1, sizeof(char));
+  size_t match;
+  test_alloc_failed(buffer);
   buffer[0] = '\0';
   uri_decode(uri, len, buffer);
-  const size_t match = strcmp(expected, buffer);
+  match = memcmp(expected, buffer, len_orig);
   printf("uri_decode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
   mu_assert("Strings don't match", match == 0);
+  free(buffer);
   return 0;
 }
 
@@ -90,8 +105,12 @@ static char * test_encode_latin1_utf8() {
   return msg ? msg : 0;
 }
 static char * test_encode_utf8() {
-  char * msg = test_uri_encode("❤","%E2%9D%A4");
+  char * msg = test_uri_encode("❤ ", "%E2%9D%A4%20");
   return msg ? msg : 0;
+}
+static char* test_encode_chinese() {
+    char* msg = test_uri_encode("ss免费账号", "ss%E5%85%8D%E8%B4%B9%E8%B4%A6%E5%8F%B7");
+    return msg ? msg : 0;
 }
 
 /* tests for decode_uri */
@@ -140,7 +159,11 @@ static char * test_decode_middle_null() {
   return msg ? msg : 0;
 }
 static char * test_decode_middle_null_len() {
-  char * msg = test_uri_decode_len("ABC%00DEF", 9, "ABC\0DEF");
+  char * msg = test_uri_decode_len("ABC%00DEF", 7, "ABC\0DEF");
+  return msg ? msg : 0;
+}
+static char* test_decode_plus_space() {
+  char* msg = test_uri_decode("ABC++DEF", "ABC  DEF");
   return msg ? msg : 0;
 }
 
@@ -157,6 +180,7 @@ static char * all_tests() {
   mu_run_test(test_encode_middle_null_len);
   mu_run_test(test_encode_latin1_utf8);
   mu_run_test(test_encode_utf8);
+  mu_run_test(test_encode_chinese);
   mu_run_test(test_decode_empty);
   mu_run_test(test_decode_something);
   mu_run_test(test_decode_something_percent);
@@ -169,18 +193,19 @@ static char * all_tests() {
   mu_run_test(test_decode_angles);
   mu_run_test(test_decode_middle_null);
   mu_run_test(test_decode_middle_null_len);
+  mu_run_test(test_decode_plus_space);
   return 0;
 }
 
 int main(int argc, char **argv) {
-   char *result = all_tests();
-   if (result != 0) {
-       printf("%s\n", result);
+   char *err = all_tests();
+   if (err != 0) {
+       printf("%s\n", err);
    }
    else {
        printf("ALL TESTS PASSED\n");
    }
    printf("Tests run: %d\n", tests_run);
 
-   return result != 0;
+   return (err == NULL) ? 0 : -1;
 }

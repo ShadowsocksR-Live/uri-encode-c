@@ -1,3 +1,6 @@
+#ifndef __URI_ENCODE_C_H__
+#define __URI_ENCODE_C_H__
+
 #include <stdlib.h>
 #include <inttypes.h>
 
@@ -44,5 +47,15 @@ static const unsigned char hexval[0x100] = {
 };
 #undef __
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 size_t uri_encode (const char *src, const size_t len, char *dst);
 size_t uri_decode (const char *src, const size_t len, char *dst);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // __URI_ENCODE_C_H__
