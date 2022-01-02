@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -50,6 +51,15 @@ static const unsigned char hexval[0x100] = {
   __,__,__,__,__,__,__,__,__,__,__,__,__,__,__,__, /* F0-FF */
 };
 #undef __
+
+
+size_t uri_encode_buffer_size(const char* src, size_t src_len) {
+    size_t d_len = URI_ENCODE_BUFF_SIZE_MAX(src_len);
+    char* tmp = (char*)calloc(d_len, sizeof(char));
+    size_t res = uri_encode(src, src_len, tmp, d_len);
+    free(tmp);
+    return res + 1;
+}
 
 size_t uri_encode (const char *src, size_t src_len, char *dst, size_t dst_len)
 {

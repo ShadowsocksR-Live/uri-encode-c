@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "minunit.h"
 #include "uri_encode.h"
 
@@ -10,7 +11,7 @@ int tests_run = 0;
 
 static char * test_uri_encode(const char *uri, const char *expected) {
   const size_t len = strlen(uri);
-  size_t b_len = len * 3 + 1;
+  size_t b_len = URI_ENCODE_BUFF_SIZE_MAX(len);
   char *buffer = (char*)calloc(b_len, sizeof(char));
   size_t match;
   test_alloc_failed(buffer);
@@ -18,13 +19,13 @@ static char * test_uri_encode(const char *uri, const char *expected) {
   uri_encode(uri, len,  buffer, b_len);
   match = strcmp(expected, buffer);
   printf("uri_encode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
-  mu_assert("Strings don't match", match == 0);
   free(buffer);
+  mu_assert("Strings don't match", match == 0);
   return 0;
 }
 
 static char * test_uri_encode_len(const char *uri, const size_t len, const char *expected) {
-  size_t b_len = len * 3 + 1;
+  size_t b_len = URI_ENCODE_BUFF_SIZE_MAX(len);
   char *buffer = (char *)calloc(b_len, sizeof(char));
   size_t match;
   test_alloc_failed(buffer);
@@ -32,8 +33,8 @@ static char * test_uri_encode_len(const char *uri, const size_t len, const char 
   uri_encode(uri, len,  buffer, b_len);
   match = strcmp(expected, buffer);
   printf("uri_encode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
-  mu_assert("Strings don't match", match == 0);
   free(buffer);
+  mu_assert("Strings don't match", match == 0);
   return 0;
 }
 
@@ -43,11 +44,11 @@ static char * test_uri_decode(const char *uri, const char *expected) {
   size_t match;
   test_alloc_failed(buffer);
   buffer[0] = '\0';
-  uri_decode(uri, buffer, len);
+  uri_decode(uri, buffer, len + 1);
   match = strcmp(expected, buffer);
   printf("uri_decode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
-  mu_assert("Strings don't match", match == 0);
   free(buffer);
+  mu_assert("Strings don't match", match == 0);
   return 0;
 }
 
@@ -57,11 +58,11 @@ static char * test_uri_decode_len(const char *uri, size_t len_orig, const char *
   size_t match;
   test_alloc_failed(buffer);
   buffer[0] = '\0';
-  uri_decode(uri, buffer, len);
+  uri_decode(uri, buffer, len + 1);
   match = memcmp(expected, buffer, len_orig);
   printf("uri_decode() got: \"%s\" expected: \"%s\"\n", buffer, expected);
-  mu_assert("Strings don't match", match == 0);
   free(buffer);
+  mu_assert("Strings don't match", match == 0);
   return 0;
 }
 
@@ -165,7 +166,7 @@ static char * test_decode_middle_null_len() {
   return msg ? msg : 0;
 }
 static char* test_decode_plus_space() {
-  char* msg = test_uri_decode("ABC++DEF", "ABC  DEF");
+  char* msg = test_uri_decode("ABC+%2B+DEF", "ABC + DEF");
   return msg ? msg : 0;
 }
 
@@ -199,6 +200,38 @@ static char * all_tests() {
   return 0;
 }
 
+
+#include <assert.h>
+
+int another_test(void) {
+    const char* encoded_uri;
+    size_t len2;
+    char* decoded_uri;
+
+    /* encode text */
+    const char* uri = "Some data!That Needs Encoding/";
+    size_t len = strlen(uri);
+    size_t b_len = uri_encode_buffer_size(uri, len);
+    char* buffer = (char*)calloc(b_len, sizeof(char));
+    assert(buffer != NULL);
+    buffer[0] = '\0';
+    uri_encode(uri, len, buffer, b_len);
+
+    /* decode text */
+    encoded_uri = "Some%20data%21That%20Needs%20Encoding%2F";
+    len2 = strlen(encoded_uri);
+    decoded_uri = (char*)calloc(len2 + 1, sizeof(char));
+    assert(decoded_uri != NULL);
+    decoded_uri[0] = '\0';
+    uri_decode(encoded_uri, decoded_uri, len2 + 1);
+
+    assert(strcmp(decoded_uri, uri) == 0);
+
+    free(decoded_uri);
+    free(buffer);
+    return 0;
+}
+
 int main(int argc, char **argv) {
    char *err = all_tests();
    if (err != 0) {
@@ -208,6 +241,8 @@ int main(int argc, char **argv) {
        printf("ALL TESTS PASSED\n");
    }
    printf("Tests run: %d\n", tests_run);
+
+   another_test();
 
    (void)argc;
    (void)argv;
