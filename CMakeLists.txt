@@ -1,6 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 
-PROJECT("URI-Encode-C" LANGUAGES C VERSION 0.5.0)
+PROJECT("uri-encode-c" LANGUAGES C VERSION 0.5.0)
 
 include(CMakeDependentOption)
 
@@ -8,7 +8,7 @@ cmake_dependent_option(URI_BUILD_TESTS
                 "Build tests"
                 ON "CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR" OFF)
 
-set(URI_ENCODE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE INTERNAL "URI-Encode-C library" FORCE)
+set(URI_ENCODE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src CACHE INTERNAL "uri-encode-c library" FORCE)
 
 include_directories(${URI_ENCODE_DIR})
 

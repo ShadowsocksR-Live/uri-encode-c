@@ -20,26 +20,34 @@ Synopsis
     #include <uri_encode.h>
 
     /* encode text */
-    const char *uri = "Some data!That Needs Encoding/";
+    const char* uri = "Some data!That Needs Encoding/";
     size_t len = strlen(uri);
-    char buffer[ calc_buffer_size(uri) ];
+    size_t b_len = uri_encode_buffer_size(uri, len);
+    char *buffer = (char*) calloc(b_len, sizeof(char));
+    assert(buffer != NULL);
     buffer[0] = '\0';
-    uri_encode(uri, len, buffer);
+    uri_encode(uri, len, buffer, b_len);
 
     /* decode text */
-    const char *encoded_uri = "Some%20data%21That%20Needs%20Decoding%2F";
-    size_t len = strlen(encoded_uri);
-    char decoded_uri[ len + 1 ];
+    const char* encoded_uri = "Some%20data%21That%20Needs%20Encoding%2F";
+    size_t len2 = strlen(encoded_uri);
+    char *decoded_uri = (char*)calloc(len2 + 1, sizeof(char));
+    assert(decoded_uri != NULL);
     decoded_uri[0] = '\0';
-    uri_decode(encoded_uri, len, decoded_uri);
+    uri_decode(encoded_uri, decoded_uri, len2 + 1);
+
+    assert(strcmp(decoded_uri, uri) == 0);
+
+    free(decoded_uri);
+    free(buffer);
 
 Installation
 ------------
 
 Builds, tests and installs a static library: `liburi_encode.a`
 
-    clone https://github.com/dnmfarrell/Encode-URI-C.git
-    cd Encode-URI-C
+    clone https://github.com/ssrlive/uri-encode-c.git uri
+    cd uri
     make
     make test
     sudo make install
@@ -65,10 +73,11 @@ Authors
 * [Aristotle Pagaltzis](https://github.com/ap)
 * [Christian Hansen](https://github.com/chansen)
 * [Jesse DuMond](https://github.com/JesseCanary)
+* [ssrlive](https://github.com/ssrlive)
 
 Version
 -------
-0.03
+0.04
 
 License
 -------
